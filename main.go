@@ -84,7 +84,7 @@ var (
 	spotifyAccessToken  = ""
 	spotifyRefreshToken = ""
 	spotifyPlaylistId   = ""
-	playlistSize        = 20
+	playlistSize        = 30
 )
 
 func main() {
@@ -165,29 +165,15 @@ func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
 	)
 
 	for i := range triplejSongs[1:] {
-		song, err := getSpotifyTackBySongNameAndArtist(triplejSongs[i].Name, triplejSongs[i].Artist)
+		tempSong, err := getSpotifyTackBySongNameAndArtist(triplejSongs[i].Name, triplejSongs[i].Artist)
 		if err != nil {
 			fmt.Println(err)
 			return nil
 		}
-		triplejSongs[i].spotifyUri = song.spotifyUri
-
-		if len(SpotifySongs)-1-i < 0 {
-			for j := range triplejSongs[i:] {
-				tempSong, err := getSpotifyTackBySongNameAndArtist(triplejSongs[i+j].Name, triplejSongs[i+j].Artist)
-				triplejSongs[i+j].spotifyUri = tempSong.spotifyUri
-				if err != nil {
-					fmt.Println(err)
-					return nil
-				}
-			}
+		if len(SpotifySongs) > 0 && SpotifySongs[len(SpotifySongs)-1].spotifyUri == tempSong.spotifyUri {
 			break
 		}
-
-		if triplejSongs[i].spotifyUri == SpotifySongs[len(SpotifySongs)-1-i].spotifyUri {
-			triplejSongs = triplejSongs[:i]
-			break
-		}
+		triplejSongs[i].spotifyUri = tempSong.spotifyUri
 	}
 
 	for i := range triplejSongs {
@@ -201,17 +187,11 @@ func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
 		return nil
 	}
 
-	for i := range SpotifySongs[:min(len(mappedSongs), len(SpotifySongs))] {
-		if len(SpotifySongs[i].spotifyUri) > 0 {
-			songsToDelete = append(songsToDelete, Track{Uri: SpotifySongs[i].spotifyUri})
-		}
-	}
-
-	if len(mappedSongs)+len(SpotifySongs)-len(songsToDelete) > playlistSize {
-		songsToRemove := len(mappedSongs) + len(SpotifySongs) - len(songsToDelete) - playlistSize
-		numberCurrentlyBeingRemoved := len(songsToDelete)
-		for i := 0; i < songsToRemove; i++ {
-			songsToDelete = append(songsToDelete, Track{Uri: SpotifySongs[i+numberCurrentlyBeingRemoved].spotifyUri})
+	if len(mappedSongs)+len(SpotifySongs) > playlistSize {
+		for i := 0; i < len(mappedSongs)+len(SpotifySongs)-playlistSize; i++ {
+			if len(SpotifySongs[i].spotifyUri) > 0 {
+				songsToDelete = append(songsToDelete, Track{Uri: SpotifySongs[i].spotifyUri})
+			}
 		}
 	}
 
@@ -221,14 +201,6 @@ func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
 		return nil
 	}
 	return nil
-}
-
-func min(firstNumber int, secondNumber int) int {
-	if firstNumber < secondNumber {
-		return firstNumber
-	} else {
-		return secondNumber
-	}
 }
 
 func removeSongsFromSpotifyPlaylist(songs []Track) error {
@@ -265,18 +237,12 @@ func removeSongsFromSpotifyPlaylist(songs []Track) error {
 		return err
 	}
 	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	stringBody := string(body)
-	fmt.Println(stringBody)
+
 	return nil
 }
 
 func addSongsToSpotifyPlaylist(songs []string) error {
-	fmt.Println("adding new songs to spotify playlist...")
+	fmt.Printf("adding %d new songs to spotify playlist...", len(songs))
 	var (
 		requestUrl = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", spotifyPlaylistId)
 		method     = "POST"
@@ -304,13 +270,7 @@ func addSongsToSpotifyPlaylist(songs []string) error {
 		return err
 	}
 	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	stringBody := string(body)
-	fmt.Println(stringBody)
+
 	return nil
 }
 
