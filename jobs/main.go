@@ -4,15 +4,25 @@ import (
 	"bytes"
 	b64 "encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 )
+
+type Config struct {
+	spotifyClientId     string
+	spotifyClientSecret string
+	spotifyAccessToken  string
+	spotifyRefreshToken string
+	spotifyPlaylistId   string
+	playlistSize        int
+}
 
 type TriplejResponse struct {
 	Items []Item `json:"items"`
@@ -44,10 +54,6 @@ type TokenRefreshResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-type SpotifyPlaylistTracksResponse struct {
-	Tracks PlaylistTracks `json:"tracks"`
-}
-
 type PlaylistTracks struct {
 	Items []SpotifyPlaylistTrackItem `json:"items"`
 }
@@ -74,25 +80,15 @@ type SpotifySearchTrackItem struct {
 	Name string `json:"name"`
 }
 
-type Uri struct {
-	Uri string `json:"uri"`
-}
-
-var (
-	spotifyClientId     = ""
-	spotifyClientSecret = ""
-	spotifyAccessToken  = ""
-	spotifyRefreshToken = ""
-	spotifyPlaylistId   = ""
-	playlistSize        = 30
-)
-
 func main() {
-	//refreshSpotifyAccessToken()
-	recentTriplejSongs := getSongsFromTriplejAPI()
-	currentPlaylistSongs, err := getCurrentSpotifyPlayList()
+	config := configFromEnv()
+	fmt.Println("🤖Triplej Bot is running...")
+
+	config.spotifyAccessToken = refreshSpotifyAccessToken(config)
+	recentTriplejSongs := getSongsFromTriplejAPI(config)
+	currentPlaylistSongs, err := getCurrentSpotifyPlayList(config)
 	// check if the last song played on triplej is in our playlist already
-	lastPlayedSong, err := getSpotifyTackBySongNameAndArtist(recentTriplejSongs[0].Name, recentTriplejSongs[0].Artist)
+	lastPlayedSong, err := getSpotifyTackBySongNameAndArtist(recentTriplejSongs[0].Name, recentTriplejSongs[0].Artist, config)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -102,33 +98,78 @@ func main() {
 		return
 	}
 
-	fmt.Println("diff found between playlist and triplej. updating playlist...")
+	fmt.Println("🤖diff found between playlist and triplej. updating playlist...")
 
-	err = updateSpotifyPlaylist(recentTriplejSongs, currentPlaylistSongs)
+	err = updateSpotifyPlaylist(recentTriplejSongs, currentPlaylistSongs, config)
 	if err != nil {
 		fmt.Println("Could not update spotify playlist")
 	}
+	fmt.Println("🤖Done.")
 }
 
-func refreshSpotifyAccessToken() {
+func configFromEnv() Config {
+	spotifyClientId := os.Getenv("SPOTIFY_CLIENT_ID")
+	spotifyPlaylistId := os.Getenv("SPOTIFY_PLAYLIST_ID")
+	spotifyClientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
+	spotifyRefreshToken := os.Getenv("SPOTIFY_REFRESH_TOKEN")
+	playlistSize, err := strconv.Atoi(os.Getenv("PLAYLIST_SIZE"))
+	if err != nil {
+		log.Fatal("playlistSize was invalid")
+	}
+
+	config := Config{
+		spotifyPlaylistId:   spotifyPlaylistId,
+		playlistSize:        playlistSize,
+		spotifyClientId:     spotifyClientId,
+		spotifyClientSecret: spotifyClientSecret,
+		spotifyRefreshToken: spotifyRefreshToken,
+	}
+
+	err = validateConfig(config)
+	if err != nil {
+		log.Fatal("one or more config fields were invalid", err)
+	}
+
+	return config
+}
+
+func validateConfig(config Config) error {
+	if len(config.spotifyPlaylistId) == 0 {
+		return errors.New("empty spotifyPlaylistId")
+	}
+	if config.playlistSize < 1 {
+		return errors.New("playlist size was smaller then 1")
+	}
+	if len(config.spotifyClientId) == 0 {
+		return errors.New("empty spotifyClientId")
+	}
+	if len(config.spotifyClientSecret) == 0 {
+		return errors.New("empty spotifyClientSecret")
+	}
+	if len(config.spotifyRefreshToken) == 0 {
+		return errors.New("empty spotifyRefreshToken")
+	}
+	return nil
+}
+
+func refreshSpotifyAccessToken(config Config) string {
 	fmt.Println("refreshing spotify access token...")
 	var (
 		accessTokenRefreshURL = "https://accounts.spotify.com/api/token"
 		method                = "POST"
-		encodedIdAndSecret    = b64.StdEncoding.EncodeToString([]byte(spotifyClientId + ":" + spotifyClientSecret))
+		encodedIdAndSecret    = b64.StdEncoding.EncodeToString([]byte(config.spotifyClientId + ":" + config.spotifyClientSecret))
 		client                = &http.Client{}
 		data                  = url.Values{}
 		tokenRefreshResponse  TokenRefreshResponse
 	)
-	fmt.Println(encodedIdAndSecret)
+
 	data.Set("grant_type", "refresh_token")
-	data.Set("refresh_token", spotifyRefreshToken)
+	data.Set("refresh_token", config.spotifyRefreshToken)
 	encodedData := data.Encode()
 
 	req, err := http.NewRequest(method, accessTokenRefreshURL, strings.NewReader(encodedData))
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Authorization", "Basic "+encodedIdAndSecret)
@@ -136,28 +177,36 @@ func refreshSpotifyAccessToken() {
 
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
 	}
-	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		log.Fatal("invalid status code", res.StatusCode)
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Print(err)
+		}
+	}(res.Body)
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return ""
 	}
 
 	err = json.Unmarshal(body, &tokenRefreshResponse)
 
 	if err != nil {
 		fmt.Println(err)
-		return
+		return ""
 	}
 
-	fmt.Fprintln(os.Stdout, "new access token: %s", tokenRefreshResponse.AccessToken)
+	return tokenRefreshResponse.AccessToken
 }
 
-func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
+func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song, config Config) error {
 
 	var (
 		mappedSongs   []string
@@ -165,7 +214,7 @@ func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
 	)
 
 	for i := range triplejSongs[1:] {
-		tempSong, err := getSpotifyTackBySongNameAndArtist(triplejSongs[i].Name, triplejSongs[i].Artist)
+		tempSong, err := getSpotifyTackBySongNameAndArtist(triplejSongs[i].Name, triplejSongs[i].Artist, config)
 		if err != nil {
 			fmt.Println(err)
 			return nil
@@ -181,21 +230,21 @@ func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
 			mappedSongs = append(mappedSongs, triplejSongs[len(triplejSongs)-1-i].spotifyUri)
 		}
 	}
-	err := addSongsToSpotifyPlaylist(mappedSongs)
+	err := addSongsToSpotifyPlaylist(mappedSongs, config)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 
-	if len(mappedSongs)+len(SpotifySongs) > playlistSize {
-		for i := 0; i < len(mappedSongs)+len(SpotifySongs)-playlistSize; i++ {
+	if len(mappedSongs)+len(SpotifySongs) > config.playlistSize {
+		for i := 0; i < len(mappedSongs)+len(SpotifySongs)-config.playlistSize; i++ {
 			if len(SpotifySongs[i].spotifyUri) > 0 {
 				songsToDelete = append(songsToDelete, Track{Uri: SpotifySongs[i].spotifyUri})
 			}
 		}
 	}
 
-	err = removeSongsFromSpotifyPlaylist(songsToDelete)
+	err = removeSongsFromSpotifyPlaylist(songsToDelete, config)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -203,16 +252,16 @@ func updateSpotifyPlaylist(triplejSongs []Song, SpotifySongs []Song) error {
 	return nil
 }
 
-func removeSongsFromSpotifyPlaylist(songs []Track) error {
+func removeSongsFromSpotifyPlaylist(songs []Track, config Config) error {
 	var (
-		requestUrl = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", spotifyPlaylistId)
+		requestUrl = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", config.spotifyPlaylistId)
 		method     = "DELETE"
 		client     = &http.Client{}
 		data       = url.Values{}
 		jsonList   []byte
 	)
 
-	fmt.Printf("removing %d songs from spotify playlist...", len(songs))
+	fmt.Printf("removing %d songs from spotify playlist...\n", len(songs))
 
 	if len(songs) == 0 {
 		return nil
@@ -220,31 +269,36 @@ func removeSongsFromSpotifyPlaylist(songs []Track) error {
 
 	jsonList, err := json.Marshal(songs)
 	data.Set("grant_type", "refresh_token")
-	data.Set("refresh_token", spotifyRefreshToken)
-	jsondata := fmt.Sprintf(`{"tracks":%s}`, string(jsonList))
+	data.Set("refresh_token", config.spotifyRefreshToken)
+	jsonData := fmt.Sprintf(`{"tracks":%s}`, string(jsonList))
 
-	req, err := http.NewRequest(method, requestUrl, bytes.NewBuffer([]byte(jsondata)))
+	req, err := http.NewRequest(method, requestUrl, bytes.NewBuffer([]byte(jsonData)))
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("Authorization", "Bearer "+spotifyAccessToken)
+	req.Header.Set("Authorization", "Bearer "+config.spotifyAccessToken)
 
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(res.Body)
 
 	return nil
 }
 
-func addSongsToSpotifyPlaylist(songs []string) error {
-	fmt.Printf("adding %d new songs to spotify playlist...", len(songs))
+func addSongsToSpotifyPlaylist(songs []string, config Config) error {
+	fmt.Printf("adding %d new songs to spotify playlist...\n", len(songs))
 	var (
-		requestUrl = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", spotifyPlaylistId)
+		requestUrl = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", config.spotifyPlaylistId)
 		method     = "POST"
 		client     = &http.Client{}
 		data       = url.Values{}
@@ -253,40 +307,45 @@ func addSongsToSpotifyPlaylist(songs []string) error {
 
 	jsonList, err := json.Marshal(songs)
 	data.Set("grant_type", "refresh_token")
-	data.Set("refresh_token", spotifyRefreshToken)
-	jsondata := fmt.Sprintf(`{"uris":%s}`, string(jsonList))
+	data.Set("refresh_token", config.spotifyRefreshToken)
+	jsonData := fmt.Sprintf(`{"uris":%s}`, string(jsonList))
 
-	req, err := http.NewRequest(method, requestUrl, bytes.NewBuffer([]byte(jsondata)))
+	req, err := http.NewRequest(method, requestUrl, bytes.NewBuffer([]byte(jsonData)))
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("Authorization", "Bearer "+spotifyAccessToken)
+	req.Header.Set("Authorization", "Bearer "+config.spotifyAccessToken)
 
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(res.Body)
 
 	return nil
 }
 
-func getSongsFromTriplejAPI() []Song {
+func getSongsFromTriplejAPI(config Config) []Song {
 	fmt.Println("fetching recently played music from the triplej API...")
 
 	var (
 		triplejResponse TriplejResponse
 		songs           []Song
-		url             = fmt.Sprintf("https://music.abcradio.net.au/api/v1/plays/search.json?station=triplej&limit=%d&order=desc", playlistSize)
+		abcUrl          = fmt.Sprintf("https://music.abcradio.net.au/api/v1/plays/search.json?station=triplej&limit=%d&order=desc", config.playlistSize)
 		method          = "GET"
 
 		client = &http.Client{}
 	)
 
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest(method, abcUrl, nil)
 
 	if err != nil {
 		fmt.Println(err)
@@ -297,9 +356,18 @@ func getSongsFromTriplejAPI() []Song {
 		fmt.Println(err)
 		return nil
 	}
-	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		log.Fatal("invalid status code", res.StatusCode)
+	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(res.Body)
+
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -322,17 +390,17 @@ func getSongsFromTriplejAPI() []Song {
 	return songs
 }
 
-func getCurrentSpotifyPlayList() ([]Song, error) {
+func getCurrentSpotifyPlayList(config Config) ([]Song, error) {
 	var (
 		spotifySearchResponse PlaylistTracks
-		url                   = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", spotifyPlaylistId)
+		spotifyUrl            = fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", config.spotifyPlaylistId)
 		method                = "GET"
 		client                = &http.Client{}
 		songs                 []Song
 	)
 
-	req, err := http.NewRequest(method, url, nil)
-	req.Header.Set("Authorization", "Bearer "+spotifyAccessToken)
+	req, err := http.NewRequest(method, spotifyUrl, nil)
+	req.Header.Set("Authorization", "Bearer "+config.spotifyAccessToken)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -342,7 +410,12 @@ func getCurrentSpotifyPlayList() ([]Song, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(res.Body)
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -367,18 +440,18 @@ func getCurrentSpotifyPlayList() ([]Song, error) {
 	return songs, nil
 }
 
-func getSpotifyTackBySongNameAndArtist(name string, artist string) (Song, error) {
-	fmt.Fprintln(os.Stdout, "looking up ", name, " by ", artist)
+func getSpotifyTackBySongNameAndArtist(name string, artist string, config Config) (Song, error) {
+	fmt.Println("looking up:", name, "by", artist)
 
 	var (
 		spotifySearchResponse SpotifySearchTracksResponse
-		url                   = "https://api.spotify.com/v1/search"
+		spotifyUrl            = "https://api.spotify.com/v1/search"
 		method                = "GET"
 		client                = &http.Client{}
 	)
 
-	req, err := http.NewRequest(method, url, nil)
-	req.Header.Set("Authorization", "Bearer "+spotifyAccessToken)
+	req, err := http.NewRequest(method, spotifyUrl, nil)
+	req.Header.Set("Authorization", "Bearer "+config.spotifyAccessToken)
 
 	query := req.URL.Query()
 	query.Add("q", fmt.Sprintf("track:%s artist:%s", name, artist))
@@ -396,9 +469,14 @@ func getSpotifyTackBySongNameAndArtist(name string, artist string) (Song, error)
 		fmt.Println(err)
 		return Song{}, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(res.Body)
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		fmt.Println(err)
 		return Song{}, err
