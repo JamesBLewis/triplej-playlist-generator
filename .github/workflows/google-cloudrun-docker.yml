@@ -94,5 +94,5 @@ jobs:
 
       - name: Build and Push Container
         run: |-
-          docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-          docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
+          docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:latest" ./
+          docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:latest"
