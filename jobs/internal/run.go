@@ -71,6 +71,7 @@ func (b *Bot) Run(ctx context.Context) error {
 }
 
 func (b *Bot) getTrackBySongNameAndArtist(ctx context.Context, song triplej.RadioSong) (spotify.Track, error) {
+	log.Printf("looking up: %s", song.Name)
 	track, err := b.spotifyClient.GetTrackBySongNameAndArtist(ctx, song.Name, song.Artists)
 	if err != nil {
 
@@ -99,6 +100,7 @@ func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.
 		}
 	}
 
+	log.Printf("adding %d songs to playlist...", len(mappedSongs))
 	err := b.spotifyClient.AddSongsToPlaylist(ctx, mappedSongs, b.spotifyPlaylistId)
 	if err != nil {
 		log.Printf("Error adding songs to playlist: %v", err)
@@ -114,6 +116,7 @@ func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.
 	}
 
 	if len(songsToDelete) > 0 {
+		log.Printf("removing %d songs from playlist...", len(songsToDelete))
 		err = b.spotifyClient.RemoveSongsFromPlaylist(ctx, songsToDelete, b.spotifyPlaylistId)
 		if err != nil {
 			log.Printf("Error removing songs from playlist: %v", err)
