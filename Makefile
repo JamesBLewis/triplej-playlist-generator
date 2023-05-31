@@ -6,7 +6,11 @@ SPOTIFY_CLIENT_ID =
 SPOTIFY_PLAYLIST_ID =
 SPOTIFY_CLIENT_SECRET =
 SPOTIFY_REFRESH_TOKEN =
-PLAYLIST_SIZE = 20
+PLAYLIST_SIZE = 30
 ##########################
-triple-j-bot:
-	go run jobs/main.go
+bot:
+	go run jobs/cmd/main.go
+
+bot-container:
+	docker build .
+	docker run
