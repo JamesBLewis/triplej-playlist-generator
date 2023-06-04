@@ -33,6 +33,14 @@ func TestFetchSongsFromTriplejAPI(t *testing.T) {
 			wantErr:    false,
 		},
 		{
+			name: "test 0 playlist size",
+			args: args{
+				playlistSize: 0,
+			},
+			wantLength: 0,
+			wantErr:    false,
+		},
+		{
 			name: "test invalid playlist size",
 			args: args{
 				playlistSize: -1,

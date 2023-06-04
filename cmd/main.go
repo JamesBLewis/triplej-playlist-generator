@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/cmd/config"
-	"github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/internal"
+	"github.com/JamesBLewis/triplej-playlist-generator/cmd/config"
+	"github.com/JamesBLewis/triplej-playlist-generator/internal"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs
+module github.com/JamesBLewis/triplej-playlist-generator
 
 go 1.19
 

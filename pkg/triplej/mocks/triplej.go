@@ -7,7 +7,7 @@ package mock_triplej
 import (
 	reflect "reflect"
 
-	triplej "github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/pkg/triplej"
+	triplej "github.com/JamesBLewis/triplej-playlist-generator/pkg/triplej"
 	gomock "github.com/golang/mock/gomock"
 )
 
