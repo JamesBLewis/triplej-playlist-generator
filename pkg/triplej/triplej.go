@@ -13,8 +13,7 @@ const (
 	abcRadioAPIBaseURL = "https://music.abcradio.net.au/api/v1/plays/search.json?station=triplej"
 )
 
-type Client struct {
-}
+type Client struct{}
 
 type RadioSong struct {
 	Name    string
@@ -56,6 +55,9 @@ func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
 		abcUrl          = abcRadioAPIBaseURL + "&limit=" + strconv.Itoa(playlistSize) + "&order=desc"
 	)
 
+	if playlistSize < 0 {
+		return []RadioSong(nil), errors.New("invalid playlist size")
+	}
 	songs = make([]RadioSong, 0, playlistSize)
 
 	req, err := http.NewRequest("GET", abcUrl, nil)

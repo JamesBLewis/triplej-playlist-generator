@@ -13,7 +13,6 @@ import (
 )
 
 func TestClient_AddSongsToPlaylist(t *testing.T) {
-
 	testCtx := context.Background()
 
 	type args struct {
@@ -23,7 +22,6 @@ func TestClient_AddSongsToPlaylist(t *testing.T) {
 	}
 
 	t.Run("add song", func(t *testing.T) {
-
 		args := args{
 			testCtx,
 			[]string{"spotify:track:2I66eI2j2ZfOe9q8TMLPbj"},
@@ -57,7 +55,6 @@ func TestClient_AddSongsToPlaylist(t *testing.T) {
 
 func TestClient_Do(t *testing.T) {
 	t.Run("token already refreshed", func(t *testing.T) {
-
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "/test" {
 				t.Errorf("Expected to request '/test', got: %s", r.URL.Path)
@@ -85,7 +82,6 @@ func TestClient_Do(t *testing.T) {
 }
 
 func TestClient_GetCurrentPlaylist(t *testing.T) {
-
 	testCtx := context.Background()
 
 	type args struct {
@@ -93,7 +89,6 @@ func TestClient_GetCurrentPlaylist(t *testing.T) {
 		playlistId string
 	}
 	t.Run("fetch current playlist", func(t *testing.T) {
-
 		args := args{
 			testCtx,
 			"somePlaylistId",
@@ -109,7 +104,10 @@ func TestClient_GetCurrentPlaylist(t *testing.T) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"items":[{"track":{"uri":"%s"}}]}`, testTrack)))
+			_, err := w.Write([]byte(fmt.Sprintf(`{"items":[{"track":{"uri":"%s"}}]}`, testTrack)))
+			if err != nil {
+				t.Error(err)
+			}
 		}))
 		defer server.Close()
 
@@ -130,7 +128,6 @@ func TestClient_GetCurrentPlaylist(t *testing.T) {
 }
 
 func TestClient_GetTrackBySongNameAndArtist(t *testing.T) {
-
 	type args struct {
 		ctx    context.Context
 		name   string
@@ -140,7 +137,6 @@ func TestClient_GetTrackBySongNameAndArtist(t *testing.T) {
 	testCtx := context.Background()
 
 	t.Run("get track", func(t *testing.T) {
-
 		args := args{
 			testCtx,
 			"The Duck Song",
@@ -153,7 +149,10 @@ func TestClient_GetTrackBySongNameAndArtist(t *testing.T) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"tracks":{"items":[{"uri":"%s","name":"%s"}]}}`, "spotify:track:2I66eI2j2ZfOe9q8TMLPbj", "The Duck Song")))
+			_, err := w.Write([]byte(fmt.Sprintf(`{"tracks":{"items":[{"uri":"%s","name":"%s"}]}}`, "spotify:track:2I66eI2j2ZfOe9q8TMLPbj", "The Duck Song")))
+			if err != nil {
+				t.Error(err)
+			}
 		}))
 		defer server.Close()
 
@@ -177,11 +176,9 @@ func TestClient_GetTrackBySongNameAndArtist(t *testing.T) {
 			t.Errorf("GetTrackBySongNameAndArtist() got = %v, want %v", got, want)
 		}
 	})
-
 }
 
 func TestClient_RemoveSongsFromPlaylist(t *testing.T) {
-
 	testCtx := context.Background()
 
 	type args struct {
@@ -191,7 +188,6 @@ func TestClient_RemoveSongsFromPlaylist(t *testing.T) {
 	}
 
 	t.Run("test delete", func(t *testing.T) {
-
 		args := args{
 			testCtx,
 			[]Track{{"spotify:track:2I66eI2j2ZfOe9q8TMLPbj"}},
@@ -224,7 +220,6 @@ func TestClient_RemoveSongsFromPlaylist(t *testing.T) {
 
 func TestClient_refreshAccessToken(t *testing.T) {
 	t.Run("fetch token", func(t *testing.T) {
-
 		testAccessToken := "testAccessToken"
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +228,10 @@ func TestClient_refreshAccessToken(t *testing.T) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf(`{"access_token":"%s"}`, testAccessToken)))
+			_, err := w.Write([]byte(fmt.Sprintf(`{"access_token":"%s"}`, testAccessToken)))
+			if err != nil {
+				t.Error(err)
+			}
 		}))
 		defer server.Close()
 
@@ -283,7 +281,10 @@ func TestClient_refreshAccessToken(t *testing.T) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`invalid response body`))
+			_, err := w.Write([]byte(`invalid response body`))
+			if err != nil {
+				t.Error(err)
+			}
 		}))
 		defer server.Close()
 

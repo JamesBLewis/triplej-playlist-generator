@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log"
 
-	"github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/cmd/config"
-	"github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/pkg/spotify"
-	"github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/pkg/triplej"
+	"github.com/JamesBLewis/triplej-playlist-generator/cmd/config"
+	"github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify"
+	"github.com/JamesBLewis/triplej-playlist-generator/pkg/triplej"
 )
 
 type Bot struct {

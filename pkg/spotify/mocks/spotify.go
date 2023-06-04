@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	spotify "github.com/JamesBLewis/triplej-playlist-generator/tree/main/jobs/pkg/spotify"
+	spotify "github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify"
 	gomock "github.com/golang/mock/gomock"
 )
 
