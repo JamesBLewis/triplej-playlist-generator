@@ -119,6 +119,62 @@ func TestBot_Run(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("duplicate triplej songs", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSpotifyClient := mock_spotify.NewMockClienter(ctrl)
+		mockTriplejClient := mock_triplej.NewMockClienter(ctrl)
+
+		args := args{
+			testCtx,
+		}
+
+		b := &Bot{
+			spotifyClient:     mockSpotifyClient,
+			triplejClient:     mockTriplejClient,
+			playlistSize:      3,
+			spotifyPlaylistId: "1234",
+		}
+
+		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
+
+		// mock logic
+		triplejSongs := []triplej.RadioSong{
+			{
+				Entity: "2",
+				Name:   "latest song",
+				Artists: []string{
+					"artist 0",
+					"artist 1",
+				},
+			},
+			{
+				Entity: "1",
+				Name:   "duplicate song",
+				Artists: []string{
+					"only artist",
+				},
+			},
+			{
+				Entity: "1",
+				Name:   "duplicate song",
+				Artists: []string{
+					"only artist",
+				},
+			},
+		}
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return(currentTracks, nil)
+		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:song0"}, nil)
+		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[1].Name, triplejSongs[1].Artists).Return(spotify.Track{Uri: "uri:song1"}, nil)
+
+		mockSpotifyClient.EXPECT().AddSongsToPlaylist(args.ctx, []string{"uri:song1", "uri:song0"}, b.spotifyPlaylistId).Return(nil)
+
+		mockSpotifyClient.EXPECT().RemoveSongsFromPlaylist(args.ctx, currentTracks[:2], b.spotifyPlaylistId)
+
+		err := b.Run(args.ctx)
+		require.NoError(t, err)
+	})
+
 	t.Run("existing playlist larger current playlistSize value", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockSpotifyClient := mock_spotify.NewMockClienter(ctrl)
