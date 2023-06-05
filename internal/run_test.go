@@ -40,6 +40,7 @@ func TestBot_Run(t *testing.T) {
 		// mock logic
 		triplejSongs := []triplej.RadioSong{
 			{
+				Id:   "2",
 				Name: "latest song",
 				Artists: []string{
 					"artist 0",
@@ -47,12 +48,14 @@ func TestBot_Run(t *testing.T) {
 				},
 			},
 			{
+				Id:   "1",
 				Name: "middle song",
 				Artists: []string{
 					"only artist",
 				},
 			},
 			{
+				Id:   "0",
 				Name: "oldest song",
 			},
 		}
@@ -89,6 +92,7 @@ func TestBot_Run(t *testing.T) {
 		// mock logic
 		triplejSongs := []triplej.RadioSong{
 			{
+				Id:   "2",
 				Name: "latest song",
 				Artists: []string{
 					"artist 0",
@@ -96,12 +100,14 @@ func TestBot_Run(t *testing.T) {
 				},
 			},
 			{
+				Id:   "1",
 				Name: "middle song",
 				Artists: []string{
 					"only artist",
 				},
 			},
 			{
+				Id:   "0",
 				Name: "oldest song",
 			},
 		}
@@ -140,23 +146,23 @@ func TestBot_Run(t *testing.T) {
 		// mock logic
 		triplejSongs := []triplej.RadioSong{
 			{
-				Entity: "2",
-				Name:   "latest song",
+				Id:   "2",
+				Name: "latest song",
 				Artists: []string{
 					"artist 0",
 					"artist 1",
 				},
 			},
 			{
-				Entity: "1",
-				Name:   "duplicate song",
+				Id:   "1",
+				Name: "duplicate song",
 				Artists: []string{
 					"only artist",
 				},
 			},
 			{
-				Entity: "1",
-				Name:   "duplicate song",
+				Id:   "1",
+				Name: "duplicate song",
 				Artists: []string{
 					"only artist",
 				},
@@ -235,6 +241,7 @@ func TestBot_Run(t *testing.T) {
 		// mock logic
 		triplejSongs := []triplej.RadioSong{
 			{
+				Id:   "2",
 				Name: "latest song",
 				Artists: []string{
 					"artist 0",
@@ -242,12 +249,14 @@ func TestBot_Run(t *testing.T) {
 				},
 			},
 			{
+				Id:   "1",
 				Name: "middle song",
 				Artists: []string{
 					"only artist",
 				},
 			},
 			{
+				Id:   "0",
 				Name: "oldest song",
 			},
 		}

@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/JamesBLewis/triplej-playlist-generator/cmd/config"
@@ -45,6 +46,7 @@ func (b *Bot) Run(ctx context.Context) error {
 		log.Printf("Error fetching current spotify playlist: %v", err)
 		return err
 	}
+	fmt.Printf("%d tracks found in the current spotfiy playlist", len(currentPlaylistSongs))
 
 	lastPlayedSong, err := b.getTrackBySongNameAndArtist(ctx, recentTriplejSongs[0])
 	if err != nil {
@@ -86,9 +88,9 @@ func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.
 
 	for index, song := range triplejSongs[1:] {
 		// skip if duplicate songs were returned by the triplej API
-		// Note: in this context as we have sliced the first item of the list index
-		// is actually 1 less than you expect.
-		if song.Entity == triplejSongs[index].Entity {
+		// Note: in this context as we have sliced the first item off the list,
+		// the index is actually 1 less than you expect.
+		if song.Id == triplejSongs[index].Id {
 			continue
 		}
 
