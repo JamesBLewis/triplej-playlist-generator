@@ -84,7 +84,14 @@ func (b *Bot) getTrackBySongNameAndArtist(ctx context.Context, song triplej.Radi
 func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.RadioSong, SpotifySongs []spotify.Track, mappedSongs []string) error {
 	var songsToDelete []spotify.Track
 
-	for _, song := range triplejSongs[1:] {
+	for index, song := range triplejSongs[1:] {
+		// skip if duplicate songs were returned by the triplej API
+		// Note: in this context as we have sliced the first item of the list index
+		// is actually 1 less than you expect.
+		if song.Entity == triplejSongs[index].Entity {
+			continue
+		}
+
 		tempSong, err := b.getTrackBySongNameAndArtist(ctx, song)
 		if err != nil {
 			continue

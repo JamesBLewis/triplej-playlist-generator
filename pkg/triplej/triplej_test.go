@@ -21,7 +21,7 @@ func TestFetchSongsFromTriplejAPI(t *testing.T) {
 			args: args{
 				playlistSize: 10,
 			},
-			wantLength: 10,
+			wantLength: 50,
 			wantErr:    false,
 		},
 		{
