@@ -16,7 +16,7 @@ const (
 type Client struct{}
 
 type RadioSong struct {
-	Entity  string
+	Id      string
 	Name    string
 	Artists []string
 }
@@ -30,7 +30,7 @@ type item struct {
 }
 
 type recording struct {
-	Entity  string   `json:"arid"`
+	Id      string   `json:"arid"`
 	Title   string   `json:"title"`
 	Artists []artist `json:"artists"`
 }
@@ -94,7 +94,7 @@ func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
 			artists = append(artists, artist.Name)
 		}
 
-		songs = append(songs, RadioSong{Entity: rec.Entity, Name: rec.Title, Artists: artists})
+		songs = append(songs, RadioSong{Id: rec.Id, Name: rec.Title, Artists: artists})
 	}
 
 	log.Printf("Retrieved %d songs from Triple J", len(songs))
