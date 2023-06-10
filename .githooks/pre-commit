@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Run make lint
+echo "Running make lint..."
+make lint
+LINT_RESULT=$?
+
+# Run make test
+echo "Running make test..."
+make test
+TEST_RESULT=$?
+
+# Check the results
+if [ $LINT_RESULT -ne 0 ] || [ $TEST_RESULT -ne 0 ]; then
+    echo "Pre-commit checks failed. Please fix the linting and test errors before committing."
+    exit 1
+fi
