@@ -70,7 +70,7 @@ func (b *Bot) Run(ctx context.Context) error {
 }
 
 func (b *Bot) getTrackBySongNameAndArtist(ctx context.Context, song triplej.RadioSong) (spotify.Track, error) {
-	log.Printf("looking up: %s", song.Name)
+	b.log.Info("looking up song", zap.Any("song", song))
 	track, err := b.spotifyClient.GetTrackBySongNameAndArtist(ctx, song.Name, song.Artists)
 	if err != nil {
 
