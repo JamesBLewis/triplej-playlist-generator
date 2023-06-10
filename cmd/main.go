@@ -12,12 +12,12 @@ import (
 )
 
 func main() {
-	fmt.Println("🤖Triplej RunBot is running...")
-	ctx := context.Background()
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
+	logger.Info("🤖Triplej RunBot is running...")
+	ctx := context.Background()
 	cfg, err := config.Load()
 	if err != nil {
 		logger.Fatal("failed to load config", zap.NamedError("ConfigError", err))
@@ -27,5 +27,6 @@ func main() {
 	if err != nil {
 		logger.Fatal("bot ran into an error while running", zap.NamedError("RuntimeError", err))
 	}
-	fmt.Println("🤖Done.")
+	fmt.Println()
+	logger.Info("🤖Done.")
 }
