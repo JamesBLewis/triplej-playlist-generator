@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -61,4 +62,15 @@ func validateConfig(config Config) error {
 		return errors.New("empty SpotifyRefreshToken")
 	}
 	return nil
+}
+
+func BuildLogger() (*zap.Logger, error) {
+	// Create a Zap configuration
+	cfg := zap.NewProductionConfig()
+
+	// Configure the output to use stderr
+	cfg.OutputPaths = []string{"stderr"}
+
+	// Create a Zap logger with the configured configuration
+	return cfg.Build()
 }
