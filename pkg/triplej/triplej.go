@@ -50,7 +50,6 @@ func NewTiplejClient() Client {
 }
 
 func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
-	log.Printf("Fetching recently played music from Triple J...")
 	var (
 		triplejResponse triplejResponse
 		songs           []RadioSong
@@ -96,7 +95,5 @@ func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
 
 		songs = append(songs, RadioSong{Id: rec.Id, Name: rec.Title, Artists: artists})
 	}
-
-	log.Printf("Retrieved %d songs from Triple J", len(songs))
 	return songs, nil
 }
