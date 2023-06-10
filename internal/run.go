@@ -38,6 +38,7 @@ func (b *Bot) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "Error fetching songs from TripleJ")
 	}
+	b.log.Info("Retrieved songs from triplej", zap.Int("recentTriplejSongs", len(recentTriplejSongs)))
 	if len(recentTriplejSongs) == 0 {
 		return errors.New("recentTriplejSongs contained 0 songs")
 	}
@@ -46,7 +47,7 @@ func (b *Bot) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "Error fetching current spotify playlist")
 	}
-	b.log.Info("tracks found in the current spotfiy playlist", zap.Int("currentPlaylistSongs", len(currentPlaylistSongs)))
+	b.log.Info("tracks found in the current spotify playlist", zap.Int("currentPlaylistSongs", len(currentPlaylistSongs)))
 
 	lastPlayedSong, err := b.getTrackBySongNameAndArtist(ctx, recentTriplejSongs[0])
 	if err != nil {
