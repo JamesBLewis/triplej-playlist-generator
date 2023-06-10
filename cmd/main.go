@@ -14,7 +14,7 @@ import (
 func main() {
 	fmt.Println("🤖Triplej RunBot is running...")
 	ctx := context.Background()
-	logger, err := zap.NewProduction()
+	logger, err := config.BuildLogger()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
