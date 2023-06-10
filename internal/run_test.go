@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 
 	mock_spotify "github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify/mocks"
 
@@ -35,6 +36,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      30,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		// mock logic
@@ -85,6 +87,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
@@ -139,6 +142,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
@@ -195,6 +199,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      1,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
@@ -234,6 +239,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      4,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}}
@@ -285,6 +291,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:song0"}}
@@ -330,6 +337,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
+			log:               zap.NewExample(),
 		}
 
 		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return([]triplej.RadioSong{}, nil)

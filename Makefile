@@ -13,7 +13,7 @@ CODE_FOLDERS=cmd internal pkg
 .PHONY: bot bot-container fmt imports lint test
 
 bot:
-	go run jobs/cmd/main.go
+	go run cmd/main.go
 
 bot-container:
 	docker build .

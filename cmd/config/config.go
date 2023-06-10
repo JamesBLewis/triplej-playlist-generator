@@ -1,10 +1,11 @@
 package config
 
 import (
-	"errors"
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 type Config struct {
@@ -23,8 +24,7 @@ func Load() (Config, error) {
 	spotifyRefreshToken := os.Getenv("SPOTIFY_REFRESH_TOKEN")
 	playlistSize, err := strconv.Atoi(os.Getenv("PLAYLIST_SIZE"))
 	if err != nil {
-		log.Println("PlaylistSize was invalid")
-		return Config{}, err
+		return Config{}, errors.Wrap(err, "PlaylistSize was invalid")
 	}
 
 	config := Config{
