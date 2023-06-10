@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/evanj/gcplogs/gcpzap"
 	"go.uber.org/zap"
 
 	"github.com/JamesBLewis/triplej-playlist-generator/cmd/config"
@@ -12,7 +13,7 @@ import (
 )
 
 func main() {
-	logger, err := zap.NewProduction()
+	logger, err := gcpzap.NewProduction()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
