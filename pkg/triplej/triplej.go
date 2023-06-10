@@ -2,11 +2,11 @@ package triplej
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -64,13 +64,13 @@ func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
 
 	req, err := http.NewRequest("GET", abcUrl, nil)
 	if err != nil {
-		return nil, fmt.Errorf("creating request to ABC Radio musicAPI failed: %v", err)
+		return nil, errors.Wrap(err, "creating request to ABC Radio musicAPI failed")
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("GET request to ABC Radio musicAPI failed: %v", err)
+		return nil, errors.Wrap(err, "GET request to ABC Radio musicAPI failed")
 	}
 	defer resp.Body.Close()
 
@@ -79,7 +79,7 @@ func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&triplejResponse); err != nil {
-		return nil, fmt.Errorf("Decoding JSON response failed: %v", err)
+		return nil, errors.Wrap(err, "Decoding JSON response failed")
 	}
 
 	for _, item := range triplejResponse.Items {

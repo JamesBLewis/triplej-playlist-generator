@@ -2,9 +2,10 @@ package internal
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
+
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/JamesBLewis/triplej-playlist-generator/cmd/config"
 	"github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify"
@@ -16,15 +17,17 @@ type Bot struct {
 	triplejClient     triplej.Clienter
 	playlistSize      int
 	spotifyPlaylistId string
+	log               *zap.Logger
 }
 
-func NewBot(config config.Config) *Bot {
+func NewBot(config config.Config, logger *zap.Logger) *Bot {
 	spotifyClient := spotify.NewSpotifyClient(config.SpotifyClientId, config.SpotifyClientSecret, config.SpotifyRefreshToken)
 	return &Bot{
 		spotifyClient:     spotifyClient,
 		triplejClient:     triplej.NewTiplejClient(),
 		playlistSize:      config.PlaylistSize,
 		spotifyPlaylistId: config.SpotifyPlaylistId,
+		log:               logger,
 	}
 }
 
@@ -33,40 +36,34 @@ func (b *Bot) Run(ctx context.Context) error {
 
 	recentTriplejSongs, err := b.triplejClient.FetchSongsFromTriplejAPI(b.playlistSize)
 	if err != nil {
-		log.Printf("Error fetching songs from TripleJ: %v", err)
-		return err
+		return errors.Wrap(err, "Error fetching songs from TripleJ")
 	}
 	if len(recentTriplejSongs) == 0 {
-		err = errors.New("recentTriplejSongs contained 0 songs")
-		return err
+		return errors.New("recentTriplejSongs contained 0 songs")
 	}
 
 	currentPlaylistSongs, err := b.spotifyClient.GetCurrentPlaylist(ctx, b.spotifyPlaylistId)
 	if err != nil {
-		log.Printf("Error fetching current spotify playlist: %v", err)
-		return err
+		return errors.Wrap(err, "Error fetching current spotify playlist")
 	}
-	fmt.Printf("%d tracks found in the current spotfiy playlist", len(currentPlaylistSongs))
+	b.log.Info("tracks found in the current spotfiy playlist", zap.Int("currentPlaylistSongs", len(currentPlaylistSongs)))
 
 	lastPlayedSong, err := b.getTrackBySongNameAndArtist(ctx, recentTriplejSongs[0])
 	if err != nil {
-		log.Printf("Could not find last triplej song on spotify: %v", err)
-		return err
+		return errors.Wrap(err, "Could not find last triplej song on spotify")
 	}
 
 	// exit if the last played song on the radio was also the most recently added song to this playlist
 	if len(currentPlaylistSongs) > 0 && lastPlayedSong.Uri == currentPlaylistSongs[len(currentPlaylistSongs)-1].Uri {
-		log.Println("Exiting... playlist is already up to date with triplej")
+		b.log.Info("Playlist is already up to date with triplej")
 		return nil
 	}
-
-	log.Println("🤖diff found between playlist and triplej. updating playlist...")
+	b.log.Info("🤖diff found between playlist and triplej. updating playlist...")
 
 	mappedSongs = append(mappedSongs, lastPlayedSong.Uri)
 	err = b.updateSpotifyPlaylist(ctx, recentTriplejSongs, currentPlaylistSongs, mappedSongs)
 	if err != nil {
-		log.Printf("Error updating spotify playlist: %v", err)
-		return err
+		return errors.Wrap(err, "Error updating spotify playlist")
 	}
 
 	return nil
@@ -83,8 +80,8 @@ func (b *Bot) getTrackBySongNameAndArtist(ctx context.Context, song triplej.Radi
 	return track, nil
 }
 
-func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.RadioSong, SpotifySongs []spotify.Track, mappedSongs []string) error {
-	var songsToDelete []spotify.Track
+func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.RadioSong, SpotifySongs []spotify.Track, songsToAdd []string) error {
+	var songsToRemove []spotify.Track
 
 	for index, song := range triplejSongs[1:] {
 		// skip if duplicate songs were returned by the triplej API
@@ -105,31 +102,29 @@ func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.
 
 		if len(tempSong.Uri) > 0 {
 			// prepend item to slice
-			mappedSongs = append([]string{tempSong.Uri}, mappedSongs...)
+			songsToAdd = append([]string{tempSong.Uri}, songsToAdd...)
 		}
 	}
 
-	log.Printf("adding %d songs to playlist...", len(mappedSongs))
-	err := b.spotifyClient.AddSongsToPlaylist(ctx, mappedSongs, b.spotifyPlaylistId)
+	b.log.Info("adding songs to playlist...", zap.Int("songsToAdd", len(songsToAdd)))
+	err := b.spotifyClient.AddSongsToPlaylist(ctx, songsToAdd, b.spotifyPlaylistId)
 	if err != nil {
-		log.Printf("Error adding songs to playlist: %v", err)
-		return err
+		return errors.Wrap(err, "Error adding songs to playlist")
 	}
 
-	if len(mappedSongs)+len(SpotifySongs) > b.playlistSize {
-		for i := 0; i < len(mappedSongs)+len(SpotifySongs)-b.playlistSize; i++ {
+	if len(songsToAdd)+len(SpotifySongs) > b.playlistSize {
+		for i := 0; i < len(songsToAdd)+len(SpotifySongs)-b.playlistSize; i++ {
 			if len(SpotifySongs[i].Uri) > 0 {
-				songsToDelete = append(songsToDelete, spotify.Track{Uri: SpotifySongs[i].Uri})
+				songsToRemove = append(songsToRemove, spotify.Track{Uri: SpotifySongs[i].Uri})
 			}
 		}
 	}
 
-	if len(songsToDelete) > 0 {
-		log.Printf("removing %d songs from playlist...", len(songsToDelete))
-		err = b.spotifyClient.RemoveSongsFromPlaylist(ctx, songsToDelete, b.spotifyPlaylistId)
+	if len(songsToRemove) > 0 {
+		b.log.Info("removing songs from playlist...", zap.Int("songsToRemove", len(songsToRemove)))
+		err = b.spotifyClient.RemoveSongsFromPlaylist(ctx, songsToRemove, b.spotifyPlaylistId)
 		if err != nil {
-			log.Printf("Error removing songs from playlist: %v", err)
-			return err
+			return errors.Wrap(err, "Error removing songs from playlist")
 		}
 	}
 

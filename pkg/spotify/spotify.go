@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -110,7 +112,7 @@ func (sc *Client) refreshAccessToken() error {
 
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, sc.accountAPI+"/token", strings.NewReader(data.Encode()))
 	if err != nil {
-		return fmt.Errorf("failed to create new request: %w", err)
+		return errors.Wrap(err, "failed to create new request")
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -119,7 +121,7 @@ func (sc *Client) refreshAccessToken() error {
 
 	res, err := sc.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to execute request: %w", err)
+		return errors.Wrap(err, "failed to execute request")
 	}
 	defer res.Body.Close()
 
@@ -139,12 +141,12 @@ func (sc *Client) refreshAccessToken() error {
 func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]Track, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/playlists/%s/tracks", sc.musicAPI, playlistId), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new request: %w", err)
+		return nil, errors.Wrap(err, "failed to create new request")
 	}
 
 	res, err := sc.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
+		return nil, errors.Wrap(err, "failed to execute request")
 	}
 	defer res.Body.Close()
 
@@ -167,7 +169,7 @@ func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]
 func (sc *Client) GetTrackBySongNameAndArtist(ctx context.Context, name string, artists []string) (Track, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sc.musicAPI+"/search", nil)
 	if err != nil {
-		return Track{}, fmt.Errorf("failed to create new request: %w", err)
+		return Track{}, errors.Wrap(err, "failed to create new request")
 	}
 
 	query := req.URL.Query()
@@ -179,7 +181,7 @@ func (sc *Client) GetTrackBySongNameAndArtist(ctx context.Context, name string, 
 
 	res, err := sc.Do(req)
 	if err != nil {
-		return Track{}, fmt.Errorf("failed to execute request: %w", err)
+		return Track{}, errors.Wrap(err, "failed to execute request")
 	}
 	defer res.Body.Close()
 
@@ -216,19 +218,19 @@ func (sc *Client) RemoveSongsFromPlaylist(ctx context.Context, songs []Track, pl
 	// Marshal the struct into JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("failed to marshal songs: %w", err)
+		return errors.Wrap(err, "failed to marshal songs")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fmt.Sprintf("%s/playlists/%s/tracks", sc.musicAPI, playlistId), bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("failed to create new request: %w", err)
+		return errors.Wrap(err, "failed to create new request")
 	}
 
 	req.Header.Set("Content-Type", ContentType)
 
 	res, err := sc.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to execute request: %w", err)
+		return errors.Wrap(err, "failed to execute request")
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -245,23 +247,23 @@ func (sc *Client) AddSongsToPlaylist(ctx context.Context, songs []string, playli
 
 	jsonList, err := json.Marshal(songs)
 	if err != nil {
-		return fmt.Errorf("failed to marshal songs: %w", err)
+		return errors.Wrap(err, "failed to marshal songs")
 	}
 	jsonData := fmt.Sprintf(`{"uris":%s}`, string(jsonList))
 	if err != nil {
-		return fmt.Errorf("failed to marshal songs: %w", err)
+		return errors.Wrap(err, "failed to marshal songList")
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s/playlists/%s/tracks", sc.musicAPI, playlistId), bytes.NewBuffer([]byte(jsonData)))
 	if err != nil {
-		return fmt.Errorf("failed to create new request: %w", err)
+		return errors.Wrap(err, "failed to create new request")
 	}
 
 	req.Header.Set("Content-Type", ContentType)
 
 	res, err := sc.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to execute request: %w", err)
+		return errors.Wrap(err, "failed to execute request")
 	}
 	defer res.Body.Close()
 
