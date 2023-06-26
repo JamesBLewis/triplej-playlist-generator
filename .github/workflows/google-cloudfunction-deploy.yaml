@@ -1,0 +1,32 @@
+name: Deploy to Cloud Functions
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: triple-j-bot                    # Google Cloud project id
+  GAR_LOCATION: gcr.io/triple-j-bot/cron-bot  # Artifact Registry location
+  SERVICE: cron-bot                           # Cloud Run service name
+  REGION: australia-southeast2                # Cloud Run service region
+
+jobs:
+  job_id:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
+
+      - id: 'deploy'
+        uses: 'google-github-actions/deploy-cloud-functions@v1'
+        with:
+          name: 'triple-j-bot'
+          runtime: 'python311'
