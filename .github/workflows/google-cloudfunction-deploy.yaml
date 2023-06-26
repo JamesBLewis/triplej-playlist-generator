@@ -1,0 +1,26 @@
+name: Deploy to Cloud Functions
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  job_id:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
+
+      - id: 'deploy'
+        uses: 'google-github-actions/deploy-cloud-functions@v1'
+        with:
+          name: 'cron-bot'
+          runtime: 'python311'

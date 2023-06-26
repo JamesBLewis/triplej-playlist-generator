@@ -55,26 +55,6 @@ env:
   REGION: australia-southeast2                # Cloud Run service region
 
 jobs:
-  deploy-cloudfunction:
-    name: '🚀 Deploy Cloud Function'
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-
-    steps:
-      - uses: 'actions/checkout@v3'
-
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
-          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
-
-      - id: 'deploy'
-        uses: 'google-github-actions/deploy-cloud-functions@v1'
-        with:
-          name: 'cron-bot'
-          runtime: 'python311'
   deploy:
     # Add 'id-token' with the intended permissions for workload identity federation
     permissions:
