@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/JamesBLewis/triplej-playlist-generator/cmd/config"
+	"github.com/JamesBLewis/triplej-playlist-generator/internal/config"
 	"github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify"
 	"github.com/JamesBLewis/triplej-playlist-generator/pkg/triplej"
 )

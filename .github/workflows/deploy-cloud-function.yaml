@@ -4,13 +4,23 @@ on:
   push:
     branches: [ "main" ]
 
+env:
+  PLAYLIST_SIZE: 30
+  PLAYLIST_ID: 4wP3HpMngLebZ8pYvXD0Et # triple j bot - Live: https://open.spotify.com/playlist/4wP3HpMngLebZ8pYvXD0Et
+
 jobs:
   deploy-cloud-function:
     runs-on: 'ubuntu-latest'
     permissions:
       contents: 'read'
       id-token: 'write'
-
+    env_vars:
+      - 'SPOTIFY_PLAYLIST_ID=${{ env.PLAYLIST_ID }}'
+      - 'PLAYLIST_SIZE=${{ env.PLAYLIST_SIZE }}'
+    secret_environment_variables:
+      - 'SPOTIFY_PLAYLIST_ID=${{ secrets.SPOTIFY_CLIENT_ID_LOCATION }}'
+      - 'PLAYLIST_SIZE=${{ secrets.SPOTIFY_CLIENT_SECRET_LOCATION }}'
+      - 'SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_REFRESH_TOKEN_LOCATION }}'
     steps:
       - uses: 'actions/checkout@v3'
 
@@ -24,4 +34,4 @@ jobs:
         uses: 'google-github-actions/deploy-cloud-functions@v1'
         with:
           name: 'bot'
-          runtime: 'python311'
+          runtime: 'go120'
