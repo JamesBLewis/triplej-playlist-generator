@@ -4,12 +4,6 @@ on:
   push:
     branches: [ "main" ]
 
-env:
-  PROJECT_ID: triple-j-bot                    # Google Cloud project id
-  GAR_LOCATION: gcr.io/triple-j-bot/cron-bot  # Artifact Registry location
-  SERVICE: cron-bot                           # Cloud Run service name
-  REGION: australia-southeast2                # Cloud Run service region
-
 jobs:
   job_id:
     permissions:
@@ -28,5 +22,5 @@ jobs:
       - id: 'deploy'
         uses: 'google-github-actions/deploy-cloud-functions@v1'
         with:
-          name: 'triple-j-bot'
+          name: 'cron-bot'
           runtime: 'python311'
