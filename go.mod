@@ -7,7 +7,7 @@ require (
 	github.com/evanj/gcplogs v0.0.0-20230218204330-31e8f302525c
 	github.com/golang/mock v1.6.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
 )
 
