@@ -13,8 +13,8 @@ jobs:
   run:
     runs-on: ubuntu-latest
     env:
-      PLAYLIST_SIZE: ${{ env.PLAYLIST_SIZE }}  # repository environment variable
-      SPOTIFY_PLAYLIST_ID: ${{ env.SPOTIFY_PLAYLIST_ID }}  # repository environment variable
+      PLAYLIST_SIZE: ${{ vars.PLAYLIST_SIZE }}  # repository environment variable
+      SPOTIFY_PLAYLIST_ID: ${{ vars.SPOTIFY_PLAYLIST_ID }}  # repository environment variable
 
     steps:
       - name: Checkout repository
