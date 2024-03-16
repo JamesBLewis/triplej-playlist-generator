@@ -31,4 +31,4 @@ jobs:
             -e SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN }} \
             -e SPOTIFY_PLAYLIST_ID=${{ env.SPOTIFY_PLAYLIST_ID }} \
             -e PLAYLIST_SIZE=${{ env.PLAYLIST_SIZE }} \
-            ghcr.io/jamesblewis/triplej-playlist-generator:latest
+            ghcr.io/jamesblewis/triplej-playlist-generator:main
