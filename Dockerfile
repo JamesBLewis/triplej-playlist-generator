@@ -65,8 +65,5 @@ USER appuser
 # Copy the executable from the "build" stage.
 COPY --from=build /bin/triple-j-bot /bin/
 
-# Expose the port that the application listens on.
-EXPOSE 9999
-
 # What the container should run when it is started.
 ENTRYPOINT [ "/bin/triple-j-bot" ]
