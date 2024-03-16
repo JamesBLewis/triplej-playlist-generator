@@ -1,0 +1,37 @@
+# workflow based off https://github.com/google-github-actions/deploy-cloud-functions
+
+name: Deploy to Cloud Functions
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PLAYLIST_SIZE: '30'
+  PLAYLIST_ID: '4wP3HpMngLebZ8pYvXD0Et' # triple j bot - Live: https://open.spotify.com/playlist/4wP3HpMngLebZ8pYvXD0Et
+
+jobs:
+  deploy-cloud-function:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - uses: 'actions/checkout@v3'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}'
+          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}'
+
+      - id: 'deploy'
+        uses: 'google-github-actions/deploy-cloud-functions@v1'
+        with:
+          name: 'bot'
+          entry_point: 'StartBot'
+          memory_mb: '128'
+          description: 'This function allows you to maintain a Spotify playlist of the most recently played music on the triplej radio station.'
+          runtime: 'go120'
+          env_vars: 'SPOTIFY_PLAYLIST_ID=${{ env.PLAYLIST_ID }},PLAYLIST_SIZE=${{ env.PLAYLIST_SIZE }}'
+          secret_environment_variables: 'SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID_LOCATION }},SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET_LOCATION }},SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN_LOCATION }}'
