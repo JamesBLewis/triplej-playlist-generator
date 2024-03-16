@@ -6,7 +6,7 @@ name: push image to ghcr
 
 on:
   push:
-    branches: [ "maingi" ]
+    branches: [ "main" ]
 
 env:
   # Use docker.io for Docker Hub if empty
