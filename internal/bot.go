@@ -107,26 +107,26 @@ func (b *Bot) updateSpotifyPlaylist(ctx context.Context, triplejSongs []triplej.
 		}
 	}
 
-	b.log.Info("adding songs to playlist...", zap.Int("songsToAdd", len(songsToAdd)))
-	err := b.spotifyClient.AddSongsToPlaylist(ctx, songsToAdd, b.spotifyPlaylistId)
-	if err != nil {
-		return errors.Wrap(err, "Error adding songs to playlist")
-	}
+	// Calculate the number of songs to remove
+	numToRemove := len(songsToAdd) + len(SpotifySongs) - b.playlistSize
 
-	if len(songsToAdd)+len(SpotifySongs) > b.playlistSize {
-		for i := 0; i < len(songsToAdd)+len(SpotifySongs)-b.playlistSize; i++ {
-			if len(SpotifySongs[i].Uri) > 0 {
-				songsToRemove = append(songsToRemove, spotify.Track{Uri: SpotifySongs[i].Uri})
-			}
-		}
+	// If we need to remove songs, slice the SpotifySongs slice to get the songs to remove
+	if numToRemove > 0 {
+		songsToRemove = append(songsToRemove, SpotifySongs[:numToRemove]...)
 	}
 
 	if len(songsToRemove) > 0 {
 		b.log.Info("removing songs from playlist...", zap.Int("songsToRemove", len(songsToRemove)))
-		err = b.spotifyClient.RemoveSongsFromPlaylist(ctx, songsToRemove, b.spotifyPlaylistId)
+		err := b.spotifyClient.RemoveSongsFromPlaylist(ctx, songsToRemove, b.spotifyPlaylistId)
 		if err != nil {
 			return errors.Wrap(err, "Error removing songs from playlist")
 		}
+	}
+
+	b.log.Info("adding songs to playlist...", zap.Int("songsToAdd", len(songsToAdd)))
+	err := b.spotifyClient.AddSongsToPlaylist(ctx, songsToAdd, b.spotifyPlaylistId)
+	if err != nil {
+		return errors.Wrap(err, "Error adding songs to playlist")
 	}
 
 	return nil

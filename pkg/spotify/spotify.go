@@ -139,10 +139,20 @@ func (sc *Client) refreshAccessToken() error {
 }
 
 func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]Track, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s/playlists/%s/tracks", sc.musicAPI, playlistId), nil)
+	requestUrl, err := url.JoinPath(sc.musicAPI, "playlists", playlistId, "tracks")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to construct request url")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestUrl, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new request")
 	}
+
+	// Add the fields and limit parameter to the request
+	query := req.URL.Query()
+	query.Add("fields", "items(track.uri)")
+	query.Add("limit", "50")
+	req.URL.RawQuery = query.Encode()
 
 	res, err := sc.Do(req)
 	if err != nil {
