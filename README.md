@@ -6,14 +6,3 @@ Automatically generate a spotify playlist from the most recently played music on
 3. Create a playlist in spotify and copy the link to it. Note we just want the `playlist_id`.
 4. Edit the makefile and add the above config.
 5. run `make`
-
-## Helpful gcloud Commands
-Execute on Cloud Run:
-```
-gcloud beta run jobs execute cron-bot
-```
-
-Deploy a new build:
-```
-gcloud builds submit --pack image=gcr.io/triple-j-bot/cron-bot
-```
