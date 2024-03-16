@@ -20,6 +20,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Pull Docker image
+        run: docker pull ghcr.io/jamesblewis/triplej-playlist-generator:latest
+
       - name: Run Docker image
         run: |
           docker run --rm \
@@ -28,4 +31,4 @@ jobs:
             -e SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN }} \
             -e SPOTIFY_PLAYLIST_ID=${{ env.SPOTIFY_PLAYLIST_ID }} \
             -e PLAYLIST_SIZE=${{ env.PLAYLIST_SIZE }} \
-            ghcr.io/jamesblewis/triplej-playlist-generator
+            ghcr.io/jamesblewis/triplej-playlist-generator:latest
