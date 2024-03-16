@@ -1,0 +1,31 @@
+name: 🤖 Run triple-j Bot
+
+on:
+  schedule:
+    - cron: '*/2 * * * *'  # runs every 2 minutes
+  workflow_dispatch:  # allows manual triggering
+
+concurrency:
+  group: run-bot
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      PLAYLIST_SIZE: ${{ env.PLAYLIST_SIZE }}  # repository environment variable
+      SPOTIFY_PLAYLIST_ID: ${{ env.SPOTIFY_PLAYLIST_ID }}  # repository environment variable
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Docker image
+        run: |
+          docker run --rm \
+            -e SPOTIFY_CLIENT_ID=${{ secrets.SPOTIFY_CLIENT_ID }} \
+            -e SPOTIFY_CLIENT_SECRET=${{ secrets.SPOTIFY_CLIENT_SECRET }} \
+            -e SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN }} \
+            -e SPOTIFY_PLAYLIST_ID=${{ env.SPOTIFY_PLAYLIST_ID }} \
+            -e PLAYLIST_SIZE=${{ env.PLAYLIST_SIZE }} \
+            ghcr.io/jamesblewis/triplej-playlist-generator
