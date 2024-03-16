@@ -276,8 +276,8 @@ func (sc *Client) AddSongsToPlaylist(ctx context.Context, songs []string, playli
 		return errors.Wrap(err, "failed to execute request")
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusCreated {
+	
+	if res.StatusCode != http.StatusCreated && res.StatusCode != http.StatusOK {
 		return fmt.Errorf("invalid status code: %d", res.StatusCode)
 	}
 
