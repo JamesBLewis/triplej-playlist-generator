@@ -17,9 +17,7 @@ jobs:
       SPOTIFY_PLAYLIST_ID: ${{ vars.SPOTIFY_PLAYLIST_ID }}  # repository environment variable
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
+      - uses: kacus/github-action-container-cleanup@v1.0.0
       - name: Pull Docker image
         run: docker pull ghcr.io/jamesblewis/triplej-playlist-generator:main
 
