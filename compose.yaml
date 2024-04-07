@@ -9,8 +9,8 @@
 # https://github.com/docker/awesome-compose
 services:
   triple-j-bot:
-    platform: linux/x86_64
     build:
+      platform: linux/arm64
       context: .
       target: final
 
