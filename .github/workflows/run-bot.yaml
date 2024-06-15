@@ -1,9 +1,9 @@
 name: 🤖 Run triple-j Bot
 
 on:
-    push:
-        branches:
-        - main
+  workflow_run:
+    workflows: [🚀 Push image to ghcr]
+    types: [completed]
 
 concurrency:
   group: run-bot
@@ -12,6 +12,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
       PLAYLIST_SIZE: ${{ vars.PLAYLIST_SIZE }}  # repository environment variable
       SPOTIFY_PLAYLIST_ID: ${{ vars.SPOTIFY_PLAYLIST_ID }}  # repository environment variable
