@@ -1,12 +1,16 @@
 package triplej
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+
+	"github.com/JamesBLewis/triplej-playlist-generator/pkg/telemetry"
 )
 
 const (
@@ -40,7 +44,7 @@ type artist struct {
 }
 
 type Clienter interface {
-	FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error)
+	FetchSongsFromTriplejAPI(ctx context.Context, playlistSize int) ([]RadioSong, error)
 }
 
 //go:generate mockgen -destination=mocks/triplej.go -source=triplej.go
@@ -49,12 +53,16 @@ func NewTiplejClient() Client {
 	return Client{}
 }
 
-func (Client) FetchSongsFromTriplejAPI(playlistSize int) ([]RadioSong, error) {
+func (Client) FetchSongsFromTriplejAPI(ctx context.Context, playlistSize int) ([]RadioSong, error) {
 	var (
 		triplejResponse triplejResponse
 		songs           []RadioSong
 		abcUrl          = abcRadioAPIBaseURL + "&limit=" + strconv.Itoa(playlistSize) + "&order=desc"
 	)
+
+	// Add a child span
+	_, childSpan := otel.Tracer(telemetry.TracerName).Start(ctx, "FetchSongsFromTriplejAPI")
+	defer childSpan.End()
 
 	if playlistSize < 0 {
 		return []RadioSong(nil), errors.New("invalid playlist size")

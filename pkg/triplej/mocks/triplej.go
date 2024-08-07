@@ -5,6 +5,7 @@
 package mock_triplej
 
 import (
+	context "context"
 	reflect "reflect"
 
 	triplej "github.com/JamesBLewis/triplej-playlist-generator/pkg/triplej"
@@ -35,16 +36,16 @@ func (m *MockClienter) EXPECT() *MockClienterMockRecorder {
 }
 
 // FetchSongsFromTriplejAPI mocks base method.
-func (m *MockClienter) FetchSongsFromTriplejAPI(playlistSize int) ([]triplej.RadioSong, error) {
+func (m *MockClienter) FetchSongsFromTriplejAPI(ctx context.Context, playlistSize int) ([]triplej.RadioSong, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchSongsFromTriplejAPI", playlistSize)
+	ret := m.ctrl.Call(m, "FetchSongsFromTriplejAPI", ctx, playlistSize)
 	ret0, _ := ret[0].([]triplej.RadioSong)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchSongsFromTriplejAPI indicates an expected call of FetchSongsFromTriplejAPI.
-func (mr *MockClienterMockRecorder) FetchSongsFromTriplejAPI(playlistSize interface{}) *gomock.Call {
+func (mr *MockClienterMockRecorder) FetchSongsFromTriplejAPI(ctx, playlistSize interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchSongsFromTriplejAPI", reflect.TypeOf((*MockClienter)(nil).FetchSongsFromTriplejAPI), playlistSize)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchSongsFromTriplejAPI", reflect.TypeOf((*MockClienter)(nil).FetchSongsFromTriplejAPI), ctx, playlistSize)
 }

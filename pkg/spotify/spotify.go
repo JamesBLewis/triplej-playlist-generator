@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+
+	"github.com/JamesBLewis/triplej-playlist-generator/pkg/telemetry"
 )
 
 const (
@@ -87,10 +90,10 @@ func NewSpotifyClient(clientId, clientSecret, refreshToken string) Clienter {
 }
 
 // Do wraps httpClient.Do and injects an access token into the request's header
-func (sc *Client) Do(req *http.Request) (*http.Response, error) {
+func (sc *Client) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	// if no access token is set, refresh it.
 	if sc.accessToken == "" {
-		if err := sc.refreshAccessToken(); err != nil {
+		if err := sc.refreshAccessToken(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -102,7 +105,10 @@ func (sc *Client) Do(req *http.Request) (*http.Response, error) {
 	return sc.httpClient.Do(req)
 }
 
-func (sc *Client) refreshAccessToken() error {
+func (sc *Client) refreshAccessToken(ctx context.Context) error {
+	// Add a child span
+	_, childSpan := otel.Tracer(telemetry.TracerName).Start(ctx, "refreshAccessToken")
+	defer childSpan.End()
 	fmt.Println("Refreshing Spotify access token...")
 
 	encodedIdAndSecret := base64.StdEncoding.EncodeToString([]byte(sc.clientId + ":" + sc.clientSecret))
@@ -131,7 +137,7 @@ func (sc *Client) refreshAccessToken() error {
 
 	tokenRefreshResponse := &TokenRefreshResponse{}
 	if err := json.NewDecoder(res.Body).Decode(tokenRefreshResponse); err != nil {
-		return fmt.Errorf("failed to unmarshal response body: %w", err)
+		return errors.Wrap(err, "failed to unmarshal response body")
 	}
 
 	sc.accessToken = tokenRefreshResponse.AccessToken
@@ -139,6 +145,9 @@ func (sc *Client) refreshAccessToken() error {
 }
 
 func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]Track, error) {
+	// Add a child span
+	ctx, childSpan := otel.Tracer(telemetry.TracerName).Start(ctx, "GetCurrentPlaylist")
+	defer childSpan.End()
 	requestUrl, err := url.JoinPath(sc.musicAPI, "playlists", playlistId, "tracks")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to construct request url")
@@ -154,7 +163,7 @@ func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]
 	query.Add("limit", "50")
 	req.URL.RawQuery = query.Encode()
 
-	res, err := sc.Do(req)
+	res, err := sc.Do(ctx, req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute request")
 	}
@@ -166,7 +175,7 @@ func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]
 
 	playlistTracks := &PlaylistTracks{}
 	if err := json.NewDecoder(res.Body).Decode(playlistTracks); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response body: %w", err)
+		return nil, errors.Wrap(err, "failed to unmarshal response body")
 	}
 
 	var songs []Track
@@ -177,6 +186,9 @@ func (sc *Client) GetCurrentPlaylist(ctx context.Context, playlistId string) ([]
 }
 
 func (sc *Client) GetTrackBySongNameAndArtist(ctx context.Context, name string, artists []string) (Track, error) {
+	// Add a child span
+	ctx, childSpan := otel.Tracer(telemetry.TracerName).Start(ctx, "GetTrackBySongNameAndArtist")
+	defer childSpan.End()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, sc.musicAPI+"/search", nil)
 	if err != nil {
 		return Track{}, errors.Wrap(err, "failed to create new request")
@@ -189,7 +201,7 @@ func (sc *Client) GetTrackBySongNameAndArtist(ctx context.Context, name string, 
 	query.Add("limit", "1")
 	req.URL.RawQuery = query.Encode()
 
-	res, err := sc.Do(req)
+	res, err := sc.Do(ctx, req)
 	if err != nil {
 		return Track{}, errors.Wrap(err, "failed to execute request")
 	}
@@ -201,7 +213,7 @@ func (sc *Client) GetTrackBySongNameAndArtist(ctx context.Context, name string, 
 
 	searchTracksResponse := &SearchTracksResponse{}
 	if err := json.NewDecoder(res.Body).Decode(searchTracksResponse); err != nil {
-		return Track{}, fmt.Errorf("failed to unmarshal response body: %w", err)
+		return Track{}, errors.Wrap(err, "failed to unmarshal response body")
 	}
 
 	if len(searchTracksResponse.Tracks.Items) == 0 {
@@ -213,6 +225,9 @@ func (sc *Client) GetTrackBySongNameAndArtist(ctx context.Context, name string, 
 }
 
 func (sc *Client) RemoveSongsFromPlaylist(ctx context.Context, songs []Track, playlistId string) error {
+	// Add a child span
+	ctx, childSpan := otel.Tracer(telemetry.TracerName).Start(ctx, "RemoveSongsFromPlaylist")
+	defer childSpan.End()
 	if len(songs) == 0 {
 		return nil
 	}
@@ -238,7 +253,7 @@ func (sc *Client) RemoveSongsFromPlaylist(ctx context.Context, songs []Track, pl
 
 	req.Header.Set("Content-Type", ContentType)
 
-	res, err := sc.Do(req)
+	res, err := sc.Do(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute request")
 	}
@@ -251,6 +266,9 @@ func (sc *Client) RemoveSongsFromPlaylist(ctx context.Context, songs []Track, pl
 }
 
 func (sc *Client) AddSongsToPlaylist(ctx context.Context, songs []string, playlistId string) error {
+	// Add a child span
+	ctx, childSpan := otel.Tracer(telemetry.TracerName).Start(ctx, "AddSongsToPlaylist")
+	defer childSpan.End()
 	if len(songs) == 0 {
 		return nil
 	}
@@ -260,9 +278,6 @@ func (sc *Client) AddSongsToPlaylist(ctx context.Context, songs []string, playli
 		return errors.Wrap(err, "failed to marshal songs")
 	}
 	jsonData := fmt.Sprintf(`{"uris":%s}`, string(jsonList))
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal songList")
-	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s/playlists/%s/tracks", sc.musicAPI, playlistId), bytes.NewBuffer([]byte(jsonData)))
 	if err != nil {
@@ -271,12 +286,12 @@ func (sc *Client) AddSongsToPlaylist(ctx context.Context, songs []string, playli
 
 	req.Header.Set("Content-Type", ContentType)
 
-	res, err := sc.Do(req)
+	res, err := sc.Do(ctx, req)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute request")
 	}
 	defer res.Body.Close()
-	
+
 	if res.StatusCode != http.StatusCreated && res.StatusCode != http.StatusOK {
 		return fmt.Errorf("invalid status code: %d", res.StatusCode)
 	}
