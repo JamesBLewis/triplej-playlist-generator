@@ -15,6 +15,9 @@ jobs:
     env:
       PLAYLIST_SIZE: ${{ vars.PLAYLIST_SIZE }}  # repository environment variable
       SPOTIFY_PLAYLIST_ID: ${{ vars.SPOTIFY_PLAYLIST_ID }}  # repository environment variable
+      OTEL_SERVICE_NAME: triple-j-bot
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_EXPORTER_OTLP_ENDPOINT: https://api.honeycomb.io
 
     steps:
       - uses: kacus/github-action-container-cleanup@v1.0.0
@@ -29,4 +32,8 @@ jobs:
             -e SPOTIFY_REFRESH_TOKEN=${{ secrets.SPOTIFY_REFRESH_TOKEN }} \
             -e SPOTIFY_PLAYLIST_ID=${{ env.SPOTIFY_PLAYLIST_ID }} \
             -e PLAYLIST_SIZE=${{ env.PLAYLIST_SIZE }} \
+            -e OTEL_SERVICE_NAME=${{ env.OTEL_SERVICE_NAME }} \
+            -e OTEL_EXPORTER_OTLP_PROTOCOL=${{ env.OTEL_EXPORTER_OTLP_PROTOCOL }} \
+            -e OTEL_EXPORTER_OTLP_ENDPOINT=${{ env.OTEL_EXPORTER_OTLP_ENDPOINT }} \
+            -e OTEL_EXPORTER_OTLP_HEADERS=${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }} \
             ghcr.io/jamesblewis/triplej-playlist-generator:main
