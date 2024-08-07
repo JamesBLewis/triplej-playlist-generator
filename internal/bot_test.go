@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 
+	"github.com/JamesBLewis/triplej-playlist-generator/pkg/log"
 	mock_spotify "github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify/mocks"
 
 	"github.com/JamesBLewis/triplej-playlist-generator/pkg/spotify"
@@ -36,7 +36,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      30,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
 		// mock logic
@@ -61,7 +61,7 @@ func TestBot_Run(t *testing.T) {
 				Name: "oldest song",
 			},
 		}
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return(triplejSongs, nil)
 		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return([]spotify.Track(nil), nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:song0"}, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[1].Name, triplejSongs[1].Artists).Return(spotify.Track{Uri: "uri:song1"}, nil)
@@ -87,7 +87,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
@@ -114,7 +114,7 @@ func TestBot_Run(t *testing.T) {
 				Name: "oldest song",
 			},
 		}
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return(triplejSongs, nil)
 		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return(currentTracks, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:song0"}, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[1].Name, triplejSongs[1].Artists).Return(spotify.Track{Uri: "uri:song1"}, nil)
@@ -142,7 +142,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
@@ -172,7 +172,7 @@ func TestBot_Run(t *testing.T) {
 				},
 			},
 		}
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return(triplejSongs, nil)
 		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return(currentTracks, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:song0"}, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[1].Name, triplejSongs[1].Artists).Return(spotify.Track{Uri: "uri:song1"}, nil)
@@ -199,7 +199,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      1,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:oldSong3"}}
@@ -214,7 +214,7 @@ func TestBot_Run(t *testing.T) {
 				},
 			},
 		}
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return(triplejSongs, nil)
 		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return(currentTracks, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:latestsong"}, nil)
 		mockSpotifyClient.EXPECT().AddSongsToPlaylist(args.ctx, []string{"uri:latestsong"}, b.spotifyPlaylistId).Return(nil)
@@ -239,7 +239,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      4,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}}
@@ -266,7 +266,7 @@ func TestBot_Run(t *testing.T) {
 				Name: "oldest song",
 			},
 		}
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return(triplejSongs, nil)
 		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return(currentTracks, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:latestsong"}, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[1].Name, triplejSongs[1].Artists).Return(spotify.Track{Uri: "uri:oldSong2"}, nil)
@@ -291,7 +291,7 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
 		currentTracks := []spotify.Track{{Uri: "uri:oldSong1"}, {Uri: "uri:oldSong2"}, {Uri: "uri:song0"}}
@@ -315,7 +315,7 @@ func TestBot_Run(t *testing.T) {
 				Name: "oldest song",
 			},
 		}
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return(triplejSongs, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return(triplejSongs, nil)
 		mockSpotifyClient.EXPECT().GetCurrentPlaylist(args.ctx, b.spotifyPlaylistId).Return(currentTracks, nil)
 		mockSpotifyClient.EXPECT().GetTrackBySongNameAndArtist(args.ctx, triplejSongs[0].Name, triplejSongs[0].Artists).Return(spotify.Track{Uri: "uri:song0"}, nil)
 
@@ -337,10 +337,10 @@ func TestBot_Run(t *testing.T) {
 			triplejClient:     mockTriplejClient,
 			playlistSize:      3,
 			spotifyPlaylistId: "1234",
-			log:               zap.NewExample(),
+			log:               log.NewLogger(),
 		}
 
-		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(b.playlistSize).Return([]triplej.RadioSong{}, nil)
+		mockTriplejClient.EXPECT().FetchSongsFromTriplejAPI(args.ctx, b.playlistSize).Return([]triplej.RadioSong{}, nil)
 
 		err := b.Run(args.ctx)
 		require.Error(t, err)

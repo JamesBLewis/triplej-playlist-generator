@@ -76,7 +76,7 @@ func TestClient_Do(t *testing.T) {
 			httpClient:   http.DefaultClient,
 		}
 
-		_, err := sc.Do(testRequest)
+		_, err := sc.Do(context.Background(), testRequest)
 		require.NoError(t, err, "did not expect an error")
 	})
 }
@@ -245,7 +245,7 @@ func TestClient_refreshAccessToken(t *testing.T) {
 			httpClient:   http.DefaultClient,
 		}
 
-		err := sc.refreshAccessToken()
+		err := sc.refreshAccessToken(context.Background())
 		require.NoError(t, err, "no error expected when refreshing token")
 		require.Equal(t, testAccessToken, sc.accessToken, "expected access token to be populated but it wasn't")
 	})
@@ -270,7 +270,7 @@ func TestClient_refreshAccessToken(t *testing.T) {
 			httpClient:   http.DefaultClient,
 		}
 
-		err := sc.refreshAccessToken()
+		err := sc.refreshAccessToken(context.Background())
 		require.Error(t, err, "error expected when refreshing token due to status code")
 	})
 
@@ -298,7 +298,7 @@ func TestClient_refreshAccessToken(t *testing.T) {
 			httpClient:   http.DefaultClient,
 		}
 
-		err := sc.refreshAccessToken()
+		err := sc.refreshAccessToken(context.Background())
 		require.Error(t, err, "error expected when refreshing token due to bad response body")
 	})
 }

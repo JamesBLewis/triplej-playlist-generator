@@ -1,6 +1,7 @@
 package triplej
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -51,8 +52,9 @@ func TestFetchSongsFromTriplejAPI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tctx := context.Background()
 			c := NewTiplejClient()
-			got, err := c.FetchSongsFromTriplejAPI(tt.args.playlistSize)
+			got, err := c.FetchSongsFromTriplejAPI(tctx, tt.args.playlistSize)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FetchSongsFromTriplejAPI() error = %v, wantErr %v", err, tt.wantErr)
 				return
