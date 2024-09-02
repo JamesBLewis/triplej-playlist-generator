@@ -51,8 +51,8 @@ github.com/tklauser/numcpus v0.8.0/go.mod h1:ZJZlAY+dmR4eut8epnzf0u/VwodKmryxR8t
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
-go.opentelemetry.io/contrib/bridges/otelslog v0.3.0 h1:Kf8NK4WW/pn3f9Gwx6XJAB2zlaW2M3VLQ4sQ3TKJhA8=
-go.opentelemetry.io/contrib/bridges/otelslog v0.3.0/go.mod h1:JV00+So1cv6GIYNUeO0xFfl/qE+DUtS3hpBlLIyOFUE=
+go.opentelemetry.io/contrib/bridges/otelslog v0.4.0 h1:i66F95zqmrf3EyN5gu0E2pjTvCRZo/p8XIYidG3vOP8=
+go.opentelemetry.io/contrib/bridges/otelslog v0.4.0/go.mod h1:JuCiVizZ6ovLZLnYk1nGRUEAnmRJLKGh5v8DmwiKlhY=
 go.opentelemetry.io/contrib/detectors/aws/lambda v0.53.0 h1:KG6fOUk3EwSH1dEpsAbsLKFbn3cFwN9xDu8plGu55zI=
 go.opentelemetry.io/contrib/detectors/aws/lambda v0.53.0/go.mod h1:bSd579exEkh/P5msRcom8YzVB6NsUxYKyV+D/FYOY7Y=
 go.opentelemetry.io/contrib/instrumentation/host v0.53.0 h1:X4r+5n6bSqaQUbPlSO5baoM7tBvipkT0mJFyuPFnPAU=

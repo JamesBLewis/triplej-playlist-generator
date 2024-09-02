@@ -7,7 +7,7 @@ require (
 	github.com/honeycombio/otel-config-go v1.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
-	go.opentelemetry.io/contrib/bridges/otelslog v0.3.0
+	go.opentelemetry.io/contrib/bridges/otelslog v0.4.0
 	go.opentelemetry.io/contrib/processors/baggage/baggagetrace v0.0.0-20240508140322-077e60990642
 	go.opentelemetry.io/otel v1.29.0
 )
