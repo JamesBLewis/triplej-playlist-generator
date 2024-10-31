@@ -10,6 +10,7 @@ import (
 func main() {
 	err := internal.RunBot()
 	if err != nil {
+		println(err.Error())
 		os.Exit(1)
 	}
 	os.Exit(0)
